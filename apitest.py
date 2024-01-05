@@ -3,10 +3,12 @@ import vk_api
 from vk_api.longpoll import VkLongPoll, VkEventType
 
 class EntryRequest:
-    def __init__(self, date, time, place) -> None:
+    def __init__(self, date, time, place, object, contact=None, addl=None) -> None:
         self.Date = date
         self.Time = time
         self.Place = place
+        self.Object = object
+        self.AddlInfo = addl
 
 def main():
     session = vk_api.VkApi(token='vk1.a.kMtsEwP0865Fsp0czDXxzx_HTIrmtRj1OIrXMB2Yj57sqIsKL0fNdHYQAaND_hr3k6VdHX7Rm9ZtcLwub_Mkg2yH3_j8FT7pheOtA_34jJ23t7fdyxozyE244tVZybCEtMAXhATwylCTu3fHw5HJ7ovlgz618_uB8vFw_KYqf_PJM-aMa5Y-d_kf6YuOKD89aYk-Mffi8t6xZzZ14dezyQ')
