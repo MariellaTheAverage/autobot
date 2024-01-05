@@ -1,0 +1,35 @@
+{
+    "admin": {
+        "role": "admin",
+        "commands": [
+            "create",
+            "update",
+            "delete",
+            "view",
+            "test"
+        ]
+    },
+
+    "driver": {
+        "role": "driver",
+        "commands": [
+            "create",
+            "update",
+            "delete",
+            "view",
+            "accept",
+            "reject",
+            "complete",
+            "stats"
+        ]
+    },
+
+    "user": {
+        "role": "user",
+        "commands": [
+            "create",
+            "update",
+            "delete"
+        ]
+    }
+}
