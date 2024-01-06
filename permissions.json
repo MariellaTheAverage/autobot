@@ -5,6 +5,7 @@
             "create",
             "update",
             "delete",
+            "confirm",
             "view",
             "test"
         ]
@@ -16,6 +17,7 @@
             "create",
             "update",
             "delete",
+            "confirm",
             "view",
             "accept",
             "reject",
@@ -29,7 +31,8 @@
         "commands": [
             "create",
             "update",
-            "delete"
+            "delete",
+            "confirm"
         ]
     }
 }
