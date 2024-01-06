@@ -7,6 +7,10 @@
             "delete",
             "confirm",
             "view",
+            "accept",
+            "reject",
+            "complete",
+            "stats",
             "test"
         ]
     },

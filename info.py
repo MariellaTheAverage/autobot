@@ -1,14 +1,12 @@
 import vk_api
 from vk_api.longpoll import VkLongPoll, VkEventType
-import mysql.connector as mysql
 import datetime as dt
+import mysql.connector as mysql
 # ^ again, vscode doesn't like this import but it works
 
 class EntryRequest:
-    def __init__(self, date: dt.date, tstart: dt.time, tend: dt.time, place, object, uid: int, phone=None) -> None:
-        self.Date = date
-        self.Start = tstart
-        self.End = tend
+    def __init__(self, place="", object="", uid="", addl="", phone=None) -> None:
+        self.Addl = addl
         self.Place = place
         self.Object = object
         self.Contact = uid
@@ -29,30 +27,44 @@ class DatabaseConnector:
         self.cur.close()
         self.conn.close()
 
+    # get statistics for a specific driver id (maybe leaderboard later)
     def get_driver_stats(self, did: int) -> int:
         cmd = (f"select pickupcnt from drivers where uid={did}")
         self.cur.execute(cmd)
         res = [entry for entry in self.cur]
         return res[0][0]
 
+    # add new driver entry into the database
     def add_new_driver(self, uid: int) -> None:
         cmd = (f"insert into drivers (uid, pickupcnt) values ({uid}, 0)")
         self.cur.execute(cmd)
         self.conn.commit()
         self.drivers.append(uid)
 
-    def publish_order(self, odr: EntryRequest, time_flag: bool) -> None:
+    # create new active order
+    def publish_order(self, odr: EntryRequest) -> None:
         if odr.Phone != None:
-            cmd = ("insert into orders (address, item, day, tstart, tend, usrid, phone) "
-                "values (%s, %s, %s, %s, %s, %s, %s)")
-            data = (odr.Place, odr.Object, odr.Date, odr.Start, odr.End, odr.Contact, odr.Phone)
+            cmd = ("insert into orders (address, item, usrid, phone, addlinfo) "
+                "values (%s, %s, %s, %s, %s)")
+            data = (odr.Place, odr.Object, odr.Contact, odr.Phone, odr.Addl)
         else:
-            cmd = ("insert into orders (address, item, day, tstart, tend, usrid) "
-                "values (%s, %s, %s, %s, %s, %s)")
-            data = (odr.Place, odr.Object, odr.Date, odr.Start, odr.End, odr.Contact)
+            cmd = ("insert into orders (address, item, usrid, addlinfo) "
+                "values (%s, %s, %s, %s)")
+            data = (odr.Place, odr.Object, odr.Contact, odr.Addl)
         self.cur.execute(cmd, data)
         self.conn.commit()
 
+    # get a list of all active orders with the unassigned ones going first
+    def get_active_orders(self) -> list:
+        cmd = ("select * from orders "
+               "where taken=0 "
+               "order by assigned")
+        
+        self.cur.execute(cmd)
+        res = [entry for entry in self.cur]
+        return res
+
+    # check if the current user is a driver without looking into the database
     def check_if_driver(self, uid) -> bool:
         return uid in self.drivers
 
@@ -62,8 +74,15 @@ class Bot:
         self.longpoll = VkLongPoll(self.session)
         self.vk = self.session.get_api()
         self.connector = DatabaseConnector()
+        self.ctxs = dict()
+        self.sync_roles()
         print("Started successfully")
-        # print(f"List of current drivers: {self.connector.drivers}")
+
+    # store all roles in context dictionary
+    def sync_roles(self):
+        for uid in self.connector.drivers:
+            self.ctxs[uid] = 'driver'
+        self.ctxs[121434527] = 'admin'
 
     def process(self, msg, role):
         pass
@@ -73,13 +92,10 @@ class Bot:
             if event.type == VkEventType.MESSAGE_NEW and event.to_me and event.text and event.from_user:
                 print(f"* >>> Received a message: {event.message} \n From: {event.user_id} / {event.from_user}")
 
-                user_role = 'user'
-                if event.user_id == 121434527:
-                    user_role = 'admin'
-                if self.connector.check_if_driver(event.user_id):
-                    user_role = 'driver'
+                if event.user_id not in self.ctxs:
+                    self.ctxs[event.user_id] = 'user'
 
-                self.process(event.message, user_role)
+                self.process(event.message, self.ctxs[event.user_id])
                 # self.vk.messages.send(user_id=event.user_id, message="Test response", random_id=0)
 
 def main():
