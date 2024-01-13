@@ -7,6 +7,7 @@ create table if not exists orders (
     taken bit(1) not null default 0,
     assigned bit(1) default 0,
     driverid int,
+    addlinfo varchar(500) default "-",
     primary key (oid),
     foreign key (driverid) references drivers(uid)
 )

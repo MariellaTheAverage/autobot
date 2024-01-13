@@ -1,10 +1,15 @@
 import vk_api
 from vk_api.longpoll import VkLongPoll, VkEventType
 import datetime as dt
+import requests
 import mysql.connector as mysql
 # ^ again, vscode doesn't like this import but it works
+# look into tg bots
 
 class EntryRequest:
+    def __str__(self) -> str:
+        pass
+
     def __init__(self, place="", object="", uid="", addl="", phone=None) -> None:
         self.Addl = addl
         self.Place = place
@@ -12,6 +17,7 @@ class EntryRequest:
         self.Contact = uid
         self.Phone = phone
 
+# mysql connection class
 class DatabaseConnector:
     def __init__(self) -> None:
         self.conn = mysql.connect(user='bot', password='SdZBB!9vUW&U]VofDfum', host='localhost', database='shelter_orders')
@@ -54,6 +60,12 @@ class DatabaseConnector:
         self.cur.execute(cmd, data)
         self.conn.commit()
 
+    # get all orders from a person
+    def get_orders_by_person(self, uid: int) -> list:
+        cmd = ("select * from orders "
+               f"where uid={uid} "
+               "order by taken")
+
     # get a list of all active orders with the unassigned ones going first
     def get_active_orders(self) -> list:
         cmd = ("select * from orders "
@@ -65,7 +77,7 @@ class DatabaseConnector:
         return res
 
     # check if the current user is a driver without looking into the database
-    def check_if_driver(self, uid) -> bool:
+    def check_if_driver(self, uid: int) -> bool:
         return uid in self.drivers
 
 class Bot:
@@ -84,6 +96,7 @@ class Bot:
             self.ctxs[uid] = 'driver'
         self.ctxs[121434527] = 'admin'
 
+    # generate a response based on the message and context of the conversation
     def process(self, msg, role):
         pass
 
@@ -100,10 +113,6 @@ class Bot:
 
 def main():
     bot = Bot()
-    exampleorder = EntryRequest(
-        dt.date.today(), dt.time(14, 30, 00), dt.time(15, 00, 00), 
-        "address", "stuff", 121434527
-    )
     # print(bot.connector.get_driver_stats(121434527))
     # bot.Listen()
 
